@@ -15,6 +15,8 @@
 #include "buffer.h"
 #include "oid.h"
 
+extern bool git_reference__strict_input_validation;
+
 #define GIT_REFS_DIR "refs/"
 #define GIT_REFS_HEADS_DIR GIT_REFS_DIR "heads/"
 #define GIT_REFS_TAGS_DIR GIT_REFS_DIR "tags/"

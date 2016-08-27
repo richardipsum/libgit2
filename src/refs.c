@@ -24,6 +24,8 @@
 #include <git2/signature.h>
 #include <git2/commit.h>
 
+bool git_reference__strict_input_validation = true;
+
 GIT__USE_STRMAP
 
 #define DEFAULT_NESTING_LEVEL	5
@@ -886,7 +888,7 @@ int git_reference__normalize_name(
 	process_flags = flags;
 	current = (char *)name;
 
-	if (*current == '/')
+	if (git_reference__strict_input_validation && *current == '/')
 		goto cleanup;
 
 	if (normalize)
@@ -901,6 +903,13 @@ int git_reference__normalize_name(
 		error = GIT_EINVALIDSPEC;
 	}
 #endif
+
+	if (!git_reference__strict_input_validation) {
+		git_buf_sets(buf, current);
+
+		error = git_buf_oom(buf) ? -1 : 0;
+		goto cleanup;
+	}
 
 	while (true) {
 		segment_len = ensure_segment_validity(current);
