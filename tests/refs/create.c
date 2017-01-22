@@ -65,6 +65,57 @@ void test_refs_create__symbolic(void)
 	git_reference_free(resolved_ref);
 }
 
+void test_refs_create__symbolic_with_arbitrary_content(void)
+{
+	git_reference *new_reference, *looked_up_ref, *resolved_ref;
+	git_repository *repo2;
+	git_oid id;
+
+	const char *new_head_tracker = "ANOTHER_HEAD_TRACKER";
+	const char *arbitrary_target = "ARBITRARY DATA";
+
+	git_oid_fromstr(&id, current_master_tip);
+
+	/* Attempt to create symbolic ref with arbitrary data in target
+	 * fails by default
+	 */
+	cl_git_fail(git_reference_symbolic_create(&new_reference, g_repo, new_head_tracker, arbitrary_target, 0, NULL));
+
+	git_libgit2_opts(GIT_OPT_ENABLE_SYMBOLIC_REF_TARGET_VALIDATION, 0);
+
+	/* With strict target validation disabled, ref creation succeeds */
+	cl_git_pass(git_reference_symbolic_create(&new_reference, g_repo, new_head_tracker, arbitrary_target, 0, NULL));
+
+	/* Ensure the reference can be looked-up... */
+	cl_git_pass(git_reference_lookup(&looked_up_ref, g_repo, new_head_tracker));
+	cl_assert(git_reference_type(looked_up_ref) & GIT_REF_SYMBOLIC);
+	cl_assert(reference_is_packed(looked_up_ref) == 0);
+	cl_assert_equal_s(looked_up_ref->name, new_head_tracker);
+
+	/* ...peeled.. */
+	//cl_git_pass(git_reference_resolve(&resolved_ref, looked_up_ref));
+	//cl_assert(git_reference_type(resolved_ref) == GIT_REF_OID);
+
+	/* ...and that it points to the current master tip */
+	//cl_assert_equal_oid(&id, git_reference_target(resolved_ref));
+	//git_reference_free(looked_up_ref);
+	//git_reference_free(resolved_ref);
+
+	/* Similar test with a fresh new repository */
+	cl_git_pass(git_repository_open(&repo2, "testrepo"));
+
+	cl_git_pass(git_reference_lookup(&looked_up_ref, repo2, new_head_tracker));
+	cl_git_pass(git_reference_resolve(&resolved_ref, looked_up_ref));
+	cl_assert_equal_oid(&id, git_reference_target(resolved_ref));
+
+	git_repository_free(repo2);
+
+	git_reference_free(new_reference);
+	git_reference_free(looked_up_ref);
+	git_reference_free(resolved_ref);
+
+}
+
 void test_refs_create__deep_symbolic(void)
 {
    // create a deep symbolic reference
