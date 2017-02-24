@@ -67,7 +67,7 @@ void test_refs_create__symbolic(void)
 
 void test_refs_create__symbolic_with_arbitrary_content(void)
 {
-	git_reference *new_reference, *looked_up_ref, *resolved_ref;
+	git_reference *new_reference, *looked_up_ref;
 	git_repository *repo2;
 	git_oid id;
 
@@ -81,7 +81,8 @@ void test_refs_create__symbolic_with_arbitrary_content(void)
 	 */
 	cl_git_fail(git_reference_symbolic_create(&new_reference, g_repo, new_head_tracker, arbitrary_target, 0, NULL));
 
-	git_libgit2_opts(GIT_OPT_ENABLE_SYMBOLIC_REF_TARGET_VALIDATION, 0);
+	//git_libgit2_opts(GIT_OPT_ENABLE_SYMBOLIC_REF_TARGET_VALIDATION, 0);
+	git_libgit2_opts(GIT_OPT_ENABLE_STRICT_SYMBOLIC_REF_CREATION, 0);
 
 	/* With strict target validation disabled, ref creation succeeds */
 	cl_git_pass(git_reference_symbolic_create(&new_reference, g_repo, new_head_tracker, arbitrary_target, 0, NULL));
@@ -92,27 +93,17 @@ void test_refs_create__symbolic_with_arbitrary_content(void)
 	cl_assert(reference_is_packed(looked_up_ref) == 0);
 	cl_assert_equal_s(looked_up_ref->name, new_head_tracker);
 
-	/* ...peeled.. */
-	//cl_git_pass(git_reference_resolve(&resolved_ref, looked_up_ref));
-	//cl_assert(git_reference_type(resolved_ref) == GIT_REF_OID);
-
-	/* ...and that it points to the current master tip */
-	//cl_assert_equal_oid(&id, git_reference_target(resolved_ref));
-	//git_reference_free(looked_up_ref);
-	//git_reference_free(resolved_ref);
-
 	/* Similar test with a fresh new repository */
 	cl_git_pass(git_repository_open(&repo2, "testrepo"));
 
 	cl_git_pass(git_reference_lookup(&looked_up_ref, repo2, new_head_tracker));
-	cl_git_pass(git_reference_resolve(&resolved_ref, looked_up_ref));
-	cl_assert_equal_oid(&id, git_reference_target(resolved_ref));
+
+	cl_assert_equal_s(git_reference_symbolic_target(new_reference), arbitrary_target);
 
 	git_repository_free(repo2);
 
 	git_reference_free(new_reference);
 	git_reference_free(looked_up_ref);
-	git_reference_free(resolved_ref);
 
 }
 
