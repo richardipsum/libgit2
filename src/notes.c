@@ -268,7 +268,9 @@ static int insert_note_in_tree_enotfound_cb(git_tree **out,
 		GIT_FILEMODE_BLOB);
 }
 
-static int note_write(git_oid *out,
+static int note_write(
+	git_oid *notes_commit_out,
+	git_oid *notes_blob_out,
 	git_repository *repo,
 	const git_signature *author,
 	const git_signature *committer,
@@ -294,12 +296,16 @@ static int note_write(git_oid *out,
 		insert_note_in_tree_enotfound_cb)) < 0)
 		goto cleanup;
 
-	if (out)
-		git_oid_cpy(out, &oid);
+	if (notes_blob_out)
+		git_oid_cpy(notes_blob_out, &oid);
+
 
 	error = git_commit_create(&oid, repo, notes_ref, author, committer,
 				  NULL, GIT_NOTES_DEFAULT_MSG_ADD,
 				  tree, *parents == NULL ? 0 : 1, (const git_commit **) parents);
+
+	if (notes_commit_out)
+		git_oid_cpy(notes_commit_out, &oid);
 
 cleanup:
 	git_tree_free(tree);
@@ -480,13 +486,51 @@ int git_note_create(
 	if (error < 0 && error != GIT_ENOTFOUND)
 		goto cleanup;
 
-	error = note_write(out, repo, author, committer, notes_ref,
+	error = note_write(NULL, out, repo, author, committer, notes_ref,
 			note, tree, target, &commit, allow_note_overwrite);
 
 cleanup:
 	git__free(notes_ref);
 	git__free(target);
 	git_commit_free(commit);
+	git_tree_free(tree);
+	return error;
+}
+
+int git_note_commit_create(
+	git_oid *notes_commit_out,
+	git_oid *notes_blob_out,
+	git_repository *repo,
+	git_commit *parent,
+	const git_signature *author,
+	const git_signature *committer,
+	const git_oid *oid,
+	const char *note,
+	int allow_note_overwrite)
+{
+	int error;
+	git_tree *tree = NULL;
+	git_oid note_commit_oid, note_blob_oid;
+	char target[GIT_OID_HEXSZ + 1];
+
+	git_oid_tostr(target, sizeof(target), oid);
+
+	if (parent != NULL && (error = git_commit_tree(&tree, parent)) < 0)
+		goto cleanup;
+
+	error = note_write(&note_commit_oid, &note_blob_oid, repo, author, committer, NULL,
+			note, tree, target, &parent, allow_note_overwrite);
+
+	if (error < 0)
+		goto cleanup;
+
+	if (notes_commit_out != NULL)
+		git_oid_cpy(notes_commit_out, &note_commit_oid);
+
+	if (notes_blob_out != NULL)
+		git_oid_cpy(notes_blob_out, &note_blob_oid);
+
+cleanup:
 	git_tree_free(tree);
 	return error;
 }
