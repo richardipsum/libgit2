@@ -153,6 +153,32 @@ GIT_EXTERN(int) git_note_create(
 	const char *note,
 	int force);
 
+/**
+ * Add a note for an object from a commit
+ *
+ * @param commit_out pointer to store the commit (optional);
+  *					NULL in case of error
+ * @param repo repository where to store the note
+ * @param notes_commit notes commit object
+ * @param notes_blob id of note blob
+ * @param author signature of the notes commit author
+ * @param committer signature of the notes commit committer
+ * @param oid OID of the git object to decorate
+ * @param note Content of the note to add for object oid
+ * @param force Overwrite existing note
+ *
+ * @return 0 or an error code
+ */
+GIT_EXTERN(int) git_note_commit_create(
+	git_commit **note_commit_out,
+	git_oid *note_blob_out,
+	git_repository *repo,
+	git_commit *notes_commit,
+	const git_signature *author,
+	const git_signature *committer,
+	const git_oid *oid,
+	const char *note,
+	int allow_note_overwrite);
 
 /**
  * Remove the note for an object
