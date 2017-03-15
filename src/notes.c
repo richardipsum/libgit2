@@ -463,6 +463,30 @@ int git_note_read(git_note **out, git_repository *repo,
 	return error;
 }
 
+int git_note_commit_read(
+	git_note **out,
+	git_repository *repo,
+	git_commit *notes_commit,
+	const git_oid *oid)
+{
+	int error;
+	char *target = NULL;
+	git_tree *tree = NULL;
+
+	target = git_oid_allocfmt(oid);
+	GITERR_CHECK_ALLOC(target);
+
+	if ((error = git_commit_tree(&tree, notes_commit)) < 0)
+		goto cleanup;
+
+	error = note_lookup(out, repo, notes_commit, tree, target);
+
+cleanup:
+	git__free(target);
+	git_tree_free(tree);
+	return error;
+}
+
 int git_note_create(
 	git_oid *out,
 	git_repository *repo,
