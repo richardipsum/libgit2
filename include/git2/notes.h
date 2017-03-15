@@ -223,6 +223,27 @@ GIT_EXTERN(int) git_note_remove(
 	const git_oid *oid);
 
 /**
+ * Remove the note for an object
+ *
+ * @param notes_commit_out pointer to store the commit (optional);
+ *					NULL in case of error
+ * @param repo repository where the note lives
+ * @param notes_commit a pointer to the notes commit object
+ * @param author signature of the notes commit author
+ * @param committer signature of the notes commit committer
+ * @param oid OID of the git object to remove the note from
+ *
+ * @return 0 or an error code
+ */
+GIT_EXTERN(int) git_note_commit_remove(
+		git_oid *notes_commit_out,
+		git_repository *repo,
+		git_commit *notes_commit,
+		const git_signature *author,
+		const git_signature *committer,
+		const git_oid *oid);
+
+/**
  * Free a git_note object
  *
  * @param note git_note object
