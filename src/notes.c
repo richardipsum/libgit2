@@ -369,7 +369,9 @@ cleanup:
 	return error;
 }
 
-static int note_remove(git_repository *repo,
+static int note_remove(
+		git_oid *note_commit_out,
+		git_repository *repo,
 		const git_signature *author, const git_signature *committer,
 		const char *notes_ref, git_tree *tree,
 		const char *target, git_commit **parents)
@@ -388,6 +390,12 @@ static int note_remove(git_repository *repo,
 	  tree_after_removal,
 	  *parents == NULL ? 0 : 1,
 	  (const git_commit **) parents);
+
+	if (error < 0)
+		goto cleanup;
+
+	if (note_commit_out)
+		git_oid_cpy(note_commit_out, &oid);
 
 cleanup:
 	git_tree_free(tree_after_removal);
@@ -579,10 +587,46 @@ int git_note_remove(git_repository *repo, const char *notes_ref_in,
 
 	if (!(error = retrieve_note_tree_and_commit(
 		      &tree, &commit, &notes_ref, repo, notes_ref_in)))
-		error = note_remove(
+		error = note_remove(NULL,
 			repo, author, committer, notes_ref, tree, target, &commit);
 
 	git__free(notes_ref);
+	git__free(target);
+	git_commit_free(commit);
+	git_tree_free(tree);
+	return error;
+}
+
+int git_note_commit_remove(
+		git_commit **commit_out,
+		git_repository *repo,
+		git_commit *notes_commit,
+		const git_signature *author,
+		const git_signature *committer,
+		const git_oid *oid)
+{
+	int error;
+	char *target = NULL;
+	git_commit *commit = NULL;
+	git_tree *tree = NULL;
+	git_oid note_oid;
+
+	target = git_oid_allocfmt(oid);
+	GITERR_CHECK_ALLOC(target);
+
+	if ((error = git_commit_tree(&tree, notes_commit)) < 0)
+		goto cleanup;
+
+	error = note_remove(&note_oid,
+		repo, author, committer, NULL, tree, target, &commit);
+
+	if (error < 0)
+		goto cleanup;
+
+	if (commit_out != NULL)
+		error = git_commit_lookup(commit_out, repo, &note_oid);
+
+cleanup:
 	git__free(target);
 	git_commit_free(commit);
 	git_tree_free(tree);
