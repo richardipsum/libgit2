@@ -502,11 +502,10 @@ int git_note_commit_create(
 {
 	int error;
 	git_tree *tree = NULL;
-	char *target = NULL;
 	git_oid note_commit_oid, note_blob_oid;
+	char target[GIT_OID_HEXSZ + 1];
 
-	target = git_oid_allocfmt(oid);
-	GITERR_CHECK_ALLOC(target);
+	git_oid_tostr(target, sizeof(target), oid);
 
 	if (parent != NULL && (error = git_commit_tree(&tree, parent)) < 0)
 		goto cleanup;
@@ -526,7 +525,6 @@ int git_note_commit_create(
 	}
 
 cleanup:
-	git__free(target);
 	git_tree_free(tree);
 	return error;
 }
