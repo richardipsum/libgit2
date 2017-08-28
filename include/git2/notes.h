@@ -202,7 +202,7 @@ GIT_EXTERN(int) git_note_create(
  * @param committer signature of the notes commit committer
  * @param oid OID of the git object to decorate
  * @param note Content of the note to add for object oid
- * @param force Overwrite existing note
+ * @param allow_note_overwrite Overwrite existing note
  *
  * @return 0 or an error code
  */
