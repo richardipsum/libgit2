@@ -516,13 +516,11 @@ int git_note_commit_create(
 	if (error < 0)
 		goto cleanup;
 
-	if (notes_commit_out != NULL) {
+	if (notes_commit_out != NULL)
 		git_oid_cpy(notes_commit_out, &note_commit_oid);
-	}
 
-	if (notes_blob_out != NULL) {
+	if (notes_blob_out != NULL)
 		git_oid_cpy(notes_blob_out, &note_blob_oid);
-	}
 
 cleanup:
 	git_tree_free(tree);
