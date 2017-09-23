@@ -473,11 +473,8 @@ int git_note_read(git_note **out, git_repository *repo,
 		  const char *notes_ref_in, const git_oid *oid)
 {
 	int error;
-	char *target = NULL, *notes_ref = NULL;
+	char *notes_ref = NULL;
 	git_commit *commit = NULL;
-
-	target = git_oid_allocfmt(oid);
-	GITERR_CHECK_ALLOC(target);
 
 	error = retrieve_note_commit(&commit, &notes_ref, repo, notes_ref_in);
 
@@ -488,7 +485,6 @@ int git_note_read(git_note **out, git_repository *repo,
 
 cleanup:
 	git__free(notes_ref);
-	git__free(target);
 	git_commit_free(commit);
 	return error;
 }
