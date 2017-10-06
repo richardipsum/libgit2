@@ -529,13 +529,13 @@ int git_note_create(
 	int allow_note_overwrite)
 {
 	int error;
-	char *target = NULL, *notes_ref = NULL;
+	char *notes_ref = NULL;
 	git_commit *existing_notes_commit = NULL;
 	git_reference *ref = NULL;
 	git_oid notes_blob_oid, notes_commit_oid;
+	char target[GIT_OID_HEXSZ + 1];
 
-	target = git_oid_allocfmt(oid);
-	GITERR_CHECK_ALLOC(target);
+	git_oid_tostr(target, sizeof(target), oid);
 
 	error = retrieve_note_commit(&existing_notes_commit, &notes_ref,
 			repo, notes_ref_in);
@@ -559,7 +559,6 @@ int git_note_create(
 
 cleanup:
 	git__free(notes_ref);
-	git__free(target);
 	git_commit_free(existing_notes_commit);
 	git_reference_free(ref);
 	return error;
@@ -595,13 +594,13 @@ int git_note_remove(git_repository *repo, const char *notes_ref_in,
 		const git_oid *oid)
 {
 	int error;
-	char *target = NULL, *notes_ref_target = NULL;
+	char *notes_ref_target = NULL;
 	git_commit *existing_notes_commit = NULL;
 	git_oid new_notes_commit;
 	git_reference *notes_ref = NULL;
+	char target[GIT_OID_HEXSZ + 1];
 
-	target = git_oid_allocfmt(oid);
-	GITERR_CHECK_ALLOC(target);
+	git_oid_tostr(target, sizeof(target), oid);
 
 	error = retrieve_note_commit(&existing_notes_commit, &notes_ref_target,
 			repo, notes_ref_in);
@@ -619,7 +618,6 @@ int git_note_remove(git_repository *repo, const char *notes_ref_in,
 
 cleanup:
 	git__free(notes_ref_target);
-	git__free(target);
 	git_reference_free(notes_ref);
 	git_commit_free(existing_notes_commit);
 	return error;
